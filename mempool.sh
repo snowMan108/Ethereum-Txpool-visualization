@@ -1,8 +1,9 @@
 #!/bin/bash
 
-DESTDIR=/dev/shm/mempool-btc
-BITCOINCLI=/home/bitcoin/bin/bitcoin-cli
-MEMPOOLHOME=/home/mempool/mempool
+DESTDIR=/dev/shm/mempool-eth
+# Change this path to your geth executable
+GETH=/home/mempool/go/bin/geth
+MEMPOOLHOME=/home/ubuntu/mempool
 TMPFILE=$DESTDIR/rawdump.txt
 export DESTDIR MEMPOOLHOME
 
@@ -21,7 +22,7 @@ fi
 if ! mkdir $DESTDIR/LOCK 2>/dev/null; then
     exit
 fi
-$BITCOINCLI getrawmempool true > $TMPFILE
+GETH attach --exec "console.log(JSON.stringify(txpool.content.pending, null ,2))" > $TMPFILE
 python3 mempool_sql.py < $TMPFILE
 rmdir $DESTDIR/LOCK
 

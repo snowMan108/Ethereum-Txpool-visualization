@@ -2,11 +2,12 @@
 import json
 import sys
 import time
+import yaml
 from subprocess import PIPE, Popen
 
 MYSQL = "/usr/bin/mysql"
 MEMPOOLLOG = "mempool.log"
-MYSQLMEMPOOLDB = "btc_mempool"
+MYSQLMEMPOOLDB = "eth_mempool"
 
 FEELIMIT = [0.0001, 1, 2, 3, 4, 5, 6, 7, 8, 10,
             12, 14, 17, 20, 25, 30, 40, 50, 60, 70, 80, 100,
@@ -19,40 +20,34 @@ found = False
 
 def parse_txdata(obj):
     global sizes, count, fees, found
-    if "size" in obj:
-        size = obj["size"]
-        fee = int(obj["fee"]*100000000)
-        if "ancestorsize" in obj:
-            asize = obj["ancestorsize"]
-            afees = obj["ancestorfees"]
-        else:
-            asize = size
-            afees = fee
-        dsize = obj["descendantsize"]
-        dfees = obj["descendantfees"]
+    # print(obj)
+    try:
+        if "gasPrice" in obj:
+            gprice =  int(obj["gasPrice"], 0)
+            gas = int(obj["gas"], 0)
+            size = gas
+            gprice = gprice / 1000000000
 
-        afpb = afees / asize  # ancestor fee (includes current)
-        fpb = fee / size      # current fee
-        dfpb = dfees / dsize  # descendant fee (includes current)
-        # total average fee for mining all ancestors and descendants.
-        tfpb = (afees + dfees - fee) / (asize + dsize - size)
-        feeperbyte = max(min(dfpb, tfpb), min(fpb, afpb))
-
-        found = True
-        for i, limit in enumerate(FEELIMIT):
-            if (feeperbyte >= limit and
-                    (i == len(FEELIMIT) - 1 or feeperbyte < FEELIMIT[i+1])):
-                sizes[i] += size
-                count[i] += 1
-                fees[i] += fee
-                break
+            found = True
+            for i, limit in enumerate(FEELIMIT):
+                if (gprice >= limit and
+                        (i == len(FEELIMIT) - 1 or gprice < FEELIMIT[i+1])):
+                    sizes[i] += size
+                    count[i] += 1
+                    # Fees in ETH
+                    fees[i] += round(gprice * gas)
+                    break
+            return None
+        return obj
+    except:
         return None
-    return obj
 
 def dump_data(timestamp, sizes, count, fees):
     sizesstr = ",".join(str(x) for x in sizes)
     countstr = ",".join(str(x) for x in count)
     feesstr = ",".join(str(x) for x in fees)
+    # print("[{:d},[{}],[{}],[{}]],\n"
+    #                   .format(timestamp, countstr, sizesstr, feesstr))
     with open(MEMPOOLLOG, "a") as logfile:
         logfile.write("[{:d},[{}],[{}],[{}]],\n"
                       .format(timestamp, countstr, sizesstr, feesstr))
@@ -64,7 +59,10 @@ def dump_data(timestamp, sizes, count, fees):
 def main():
     global sizes, count, fees, found
     timestamp = int(time.time())
-    json.load(sys.stdin, object_hook=parse_txdata)
+    try:
+        json.load(sys.stdin, object_hook=parse_txdata)
+    except:
+        pass
     if found:
         dump_data(timestamp, sizes, count, fees)
 

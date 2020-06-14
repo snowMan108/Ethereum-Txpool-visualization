@@ -18,10 +18,10 @@
 */
 
 $dbtype = "mysql";
-$dbdatabase = "dbname=btc_mempool;host=localhost";
+$dbdatabase = "dbname=eth_mempool;host=localhost";
 $dbdsn = "$dbtype:$dbdatabase";
 $dbuser = "www";
-$dbpass = "<redacted>";
+$dbpass = "<your-secret-password>";
 $dboptions = array();
 
 $feelevels = 46;
