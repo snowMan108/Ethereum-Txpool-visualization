@@ -1,6 +1,6 @@
 # Ethereum Txpool Statistics
 
-This is the code to create an Ethereum Txpool visualization. Link: [https://eth.zengo.link](https://eth.zengo.link/queue/#0,8h)
+This is the code to create an Ethereum Txpool visualization. Link: [https://txpool.zengo.com](https://txpool.zengo.com/queue/)
 
 ![Txpool visualization](Demo.png?raw=true 'Txpool visualization')
 
